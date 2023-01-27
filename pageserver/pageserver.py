@@ -88,11 +88,58 @@ def respond(sock):
     request = str(request, encoding='utf-8', errors='strict')
     log.info("--- Received request ----")
     log.info("Request was {}\n***\n".format(request))
-
+    options = get_options()
     parts = request.split()
     if len(parts) > 1 and parts[0] == "GET":
-        transmit(STATUS_OK, sock)
-        transmit(CAT, sock)
+        print(parts[1])
+        print(options.DOCROOT)
+        req = parts[1][1:]
+        FORB = 0
+
+        if req == "trivia.css":
+
+            filename= options.DOCROOT + req
+
+            with open(filename, "r") as file:
+                file_contents0 = file.read()
+
+            transmit(STATUS_OK, sock)
+            transmit(file_contents0, sock)
+
+        elif req == "trivia.html":
+            filename= options.DOCROOT + req
+            css = options.DOCROOT + "trivia.css"
+
+            with open(filename, "r") as file:
+                file_contents= file.read()
+            with open(css, "r") as file2:
+
+                file_contentcss= file2.read()
+
+            
+
+            transmit(STATUS_OK, sock)
+            transmit(file_contents, sock)
+
+        else:
+            for x in req:
+                if x == "~":
+                    FORB = FORB + 1
+                    transmit(STATUS_FORBIDDEN, sock)
+                    transmit("That input is forbidden unfornately", sock)
+                    break
+                elif x == ".":
+                    FORB = FORB + 1
+                    if FORB == 2:
+                        transmit(STATUS_FORBIDDEN,sock)
+                        transmit("That input is forbidden unfornately", sock)
+                        break
+            if FORB < 1:
+                transmit(STATUS_NOT_FOUND, sock)
+                transmit("File not found", sock)
+            
+        
+        
     else:
         log.info("Unhandled request: {}".format(request))
         transmit(STATUS_NOT_IMPLEMENTED, sock)
